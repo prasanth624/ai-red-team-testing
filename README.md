@@ -1,76 +1,198 @@
-# AI Red-Team Testing
+# AI Red-Team Testing for the Customer Support Chatbot
 
-## What is AI Red-Team Testing?
+## 1. What Is Red-Team Testing?
 
-AI red-team testing is the process of deliberately testing an AI system with adversarial inputs to identify security vulnerabilities, weaknesses, and unsafe behaviors before they can be exploited.
+Red-team testing is a security testing approach that simulates real-world attacks to identify weaknesses in a system. It evaluates how an application responds to malicious inputs, unexpected requests, and attempts to bypass security controls.
 
-Unlike traditional software testing, which often checks whether an application works as expected, AI red-team testing examines how an AI model or application behaves under unexpected, manipulative, or malicious inputs.
+## 2. Project Goal
 
-For example, a customer-support chatbot might be tested to determine whether it can be manipulated into:
+The goal of this project is to assess the security of an existing customer-support chatbot using automated red-team testing with Promptfoo.
 
-- Revealing another customer's personal information.
-- Accessing orders or billing records without proper authorization.
-- Ignoring its intended security rules.
-- Exposing hidden system instructions.
-- Producing responses that violate the application's security requirements.
+The assessment aims to:
 
-The objective is to discover weaknesses, understand their impact, and improve the system's security and reliability.
+- Identify potential exposure of personally identifiable information (PII).
+- Test role-based access control (RBAC) behavior.
+- Evaluate resistance to system prompt extraction attempts.
+- Generate diverse adversarial test cases using a Qwen model hosted on Groq.
+- Apply different attack strategies to explore potential security weaknesses.
+- Review the results and identify areas for security improvement.
 
-## Why is AI Red-Team Testing Important?
+## 3. Tools and Technologies
 
-AI applications introduce security risks that may not be detected by ordinary functional testing. A chatbot can produce a normal response during routine usage but behave differently when confronted with carefully crafted prompts.
+| Component | Technology / Configuration | Purpose |
+|---|---|---|
+| Red-team framework | Promptfoo | Orchestrates red-team test generation and execution. |
+| Model provider | Groq API | Provides hosted inference for the configured Qwen model. |
+| Attack-generation model | `qwen/qwen3.8-27b` | Generates adversarial test cases through Groq. |
+| Target application | Customer-support chatbot | Application being assessed. |
+| Target endpoint | `https://customer-service-chatbot-example.promptfoo.app` | Configured endpoint for the chatbot under test. |
+| Main configuration | `configs/promptfooconfig.yaml` | Stores the primary Promptfoo configuration. |
+| Generated test cases | `configs/redteam.yaml` | Stores generated adversarial test cases. |
+| API credential | `GROQ_API_KEY` | Supplies the Groq API key through an environment variable. |
 
-AI red-team testing helps organizations:
+## 4. Repository Structure
 
-**1. Identify security vulnerabilities**
+```text
+ai-red-team-testing/
+├── README.md
+└── configs/
+    ├── promptfooconfig.yaml
+    └── redteam.yaml
+```
 
-Discover potential weaknesses such as sensitive information disclosure, prompt injection, unauthorized data access, and attempts to bypass security controls.
+- `configs/promptfooconfig.yaml` — Main Promptfoo configuration containing the target chatbot, Groq provider, and red-team settings.
+- `configs/redteam.yaml` — Generated red-team test artifact, containing the test cases produced by the workflow.
 
-**2. Validate security controls**
+## 5. Prerequisites
 
-Check whether the application protects sensitive information, enforces access permissions, and follows its intended security boundaries.
+Before starting, ensure you have:
 
-**3. Test adversarial scenarios at scale**
+- Node.js and Promptfoo installed according to the official installation guide.
+- A valid Groq API key.
+- Access to the configured Qwen model.
+- The target chatbot endpoint and authorization to test it.
+- Windows PowerShell if following the commands below.
 
-Generate and execute many variations of attack prompts instead of relying entirely on manual testing.
+Installation guide: https://www.promptfoo.dev/docs/installation/
 
-**4. Improve AI application reliability**
+## 6. Setup and Execution
 
-Use test results to identify weaknesses, implement mitigations, and repeat tests to determine whether the fixes work.
+### Step 1: Initialize Promptfoo
 
-**5. Establish repeatable security assessments**
+Follow the [official Promptfoo installation guide](https://www.promptfoo.dev/docs/installation/) to install and initialize Promptfoo.
 
-Maintain test configurations, generated prompts, evaluation results, and findings so that security assessments can be repeated after application changes.
+Open PowerShell in the directory where you want to run the assessment.
 
-## What Does This Project Do?
+Verify that Promptfoo is available:
 
-This repository demonstrates an automated AI red-team testing workflow using **Promptfoo and Groq-hosted Qwen models**.
+```powershell
+promptfoo.cmd --version
+```
 
-Promptfoo provides the red-team testing framework, while Groq provides access to the configured Qwen model used for generating adversarial test prompts.
+### Step 2: Configure Promptfoo
 
-The workflow focuses on testing a customer-support chatbot for security weaknesses.
+Open `configs/promptfooconfig.yaml` in this repository.
 
-The process consists of three main components:
+Copy the configuration contents and paste them into the Promptfoo configuration file in your initialized project. Save the file as `promptfooconfig.yaml`.
 
-1. **Test generation:** Qwen, accessed through Groq, generates adversarial prompts based on the configured application context, security plugins, and attack strategies.
-2. **Target application:** Promptfoo sends the generated prompts to the customer-support chatbot and collects its responses.
-3. **Evaluation:** Promptfoo evaluates the responses against the applicable security criteria and records the results for investigation.
+The configuration defines the target chatbot, the Groq-hosted Qwen model, and the red-team testing settings.
 
-## What Security Areas Can Be Tested?
+### Step 3: Configure the Groq API Key
 
-Depending on the configured plugins and strategies, the project can explore areas such as:
+Set your Groq API key as an environment variable in PowerShell:
 
-- **Personally identifiable information (PII):** Attempts to disclose sensitive customer information.
-- **Role-based access control (RBAC):** Attempts to bypass permissions or access restrictions.
-- **Prompt extraction:** Attempts to reveal hidden system instructions.
-- **Adversarial input variations:** Tests that vary the representation or wording of attack prompts, including Base64, hexadecimal, ROT13, homoglyphs, and leetspeak where supported.
+```powershell
+$env:GROQ_API_KEY = "your-groq-api-key"
+```
 
-The selected plugins and strategies determine the scope of each assessment. They do not guarantee that every possible vulnerability will be detected.
+Replace `your-groq-api-key` with your actual API key.
 
-## Expected Outcome
+The configuration references this environment variable so that the key does not need to be hardcoded into the YAML file. Do not commit your API key to source control.
 
-The goal is to create a repeatable workflow for discovering and investigating potential AI security weaknesses.
+This environment variable applies to the current PowerShell session.
 
-Test results help identify cases that need further review. A reported failure is not automatically proof of an exploitable vulnerability, and a passing test does not guarantee that the application is secure. Findings should be reviewed, reproduced where appropriate, and addressed through application-level security improvements.
+### Step 4: Review the Configuration
 
-This project is intended for authorized security testing, experimentation, and learning about the practical application of automated red-team testing to AI-powered applications.
+Before executing the tests, verify that the configuration contains the correct target endpoint, model identifier, API settings, plugins, and strategies.
+
+Ensure that the target is authorized for security testing.
+
+### Step 5: Generate and Execute Red-Team Tests
+
+Navigate to the directory containing the copied `promptfooconfig.yaml` file and execute:
+
+```powershell
+promptfoo.cmd redteam run
+```
+
+Promptfoo uses the configured red-team provider to generate adversarial test cases and runs the applicable tests against the target chatbot.
+
+### Step 6: Review the Results
+
+Inspect the results produced by Promptfoo.
+
+Investigate failed tests to determine whether the chatbot exhibited a security weakness, whether the test was generated correctly, and whether the result requires further validation.
+
+Document confirmed findings and recommended remediation.
+
+## 7. Important Configuration Components
+
+The main configuration file is `configs/promptfooconfig.yaml`.
+
+### Target chatbot (`providers`)
+
+Defines the customer-support chatbot being tested, including its endpoint, HTTP method, request body, and response extraction.
+
+The configured endpoint is:
+
+`https://customer-service-chatbot-example.promptfoo.app`
+
+Verify that this is the intended target and that you have permission to test it before running the assessment.
+
+### Red-team provider (`redteam.provider`)
+
+Specifies the model used to generate adversarial test cases.
+
+The current configuration uses a Qwen model through Groq's OpenAI-compatible API.
+
+```yaml
+redteam:
+  provider:
+    id: openai:chat:qwen/qwen3.8-27b
+    config:
+      apiBaseUrl: https://api.groq.com/openai/v1
+      apiKey: "{{ env.GROQ_API_KEY }}"
+```
+
+Confirm that the model identifier is available to your Groq account and supported by your installed Promptfoo version.
+
+### Plugins
+
+Plugins define the security areas being tested.
+
+| Plugin | Purpose |
+|---|---|
+| `pii` | Tests for inappropriate disclosure of personal information. |
+| `rbac` | Tests for potential role-based access control weaknesses. |
+| `prompt-extraction` | Tests whether protected system instructions can be extracted. |
+
+### Strategies
+
+Strategies modify or transform adversarial prompts to explore different chatbot responses.
+
+| Strategy | Purpose |
+|---|---|
+| `basic` | Tests direct adversarial requests. |
+| `base64` | Tests prompts encoded using Base64. |
+| `hex` | Tests prompts represented in hexadecimal. |
+| `homoglyph` | Tests visually similar character substitutions. |
+| `leetspeak` | Tests substitutions involving numbers and symbols. |
+| `rot13` | Tests prompts transformed using ROT13. |
+
+## 8. Understanding the Workflow
+
+The overall workflow is:
+
+1. Configure the target chatbot in Promptfoo.
+2. Configure Groq and the Qwen model for adversarial test generation.
+3. Select the security plugins and attack strategies.
+4. Generate test cases.
+5. Execute the applicable tests against the chatbot.
+6. Review the outcomes and investigate potential vulnerabilities.
+
+Groq and Qwen support test generation; Promptfoo orchestrates the assessment; the customer-support chatbot is the application under test.
+
+## 9. Security Considerations
+
+- Test only systems for which you have authorization.
+- Use synthetic customer information in test prompts.
+- Never commit API keys or other secrets.
+- Review generated test artifacts before publishing them.
+- Treat failed tests as potential findings that require investigation, not automatic proof of a vulnerability.
+
+## 10. References
+
+- [Promptfoo Installation](https://www.promptfoo.dev/docs/installation/)
+- [Promptfoo Red-Team Configuration](https://www.promptfoo.dev/docs/red-team/configuration/)
+- [Promptfoo Red-Team Quickstart](https://www.promptfoo.dev/docs/red-team/quickstart/)
+- [Groq API Quickstart](https://console.groq.com/docs/quickstart/)
